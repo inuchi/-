@@ -1,0 +1,175 @@
+import pygame
+import random
+import time
+# Pygameのサウンドを初期化
+pygame.mixer.init()
+
+# 敵の倒したときの音声ファイルを読み込む
+#enemy_down_sound_1 = pygame.mixer.Sound('enemy_down1.wav')
+#enemy_down_sound_2 = pygame.mixer.Sound('enemy_down2.wav')
+#enemy_down_sound_3 = pygame.mixer.Sound('enemy_down3.wav')
+
+# ウィンドウのサイズ
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+WIDTH_CHAR=80
+HEIGHT_CHAR =80
+# 色の定義
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+# プレイヤーのクラス
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("player_carrot.png") # プレイヤーの画像を読み込む
+        self.rect = self.image.get_rect()
+        self.rect.centerx = SCREEN_WIDTH // 2
+        self.rect.bottom = SCREEN_HEIGHT - 10
+        self.speed_x = 0
+
+    def update(self):
+        self.rect.x += self.speed_x
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+
+    def shoot(self):
+        # 弾を撃つ処理をここに追加する
+        pass
+
+# 敵のクラス
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, size):
+        super().__init__()
+        self.image = pygame.image.load('enemy_veggie.png')
+        if size == 1:
+            self.image = pygame.transform.scale(self.image, (50, 50))
+            self.rect = self.image.get_rect()
+        elif size == 2:
+            self.image = pygame.transform.scale(self.image, (75, 75))
+            self.rect = self.image.get_rect()
+        else:
+            self.image = pygame.transform.scale(self.image, (100, 100))
+            self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(0, SCREEN_WIDTH - self.rect.width)
+        self.rect.y = random.randrange(-100, -40)
+        self.speed_y = random.randrange(1, 5)
+
+    def update(self):
+        self.rect.y += self.speed_y
+        if self.rect.y > SCREEN_HEIGHT or pygame.sprite.spritecollide(self, bullets, True):
+            self.rect.x = random.randrange(0, SCREEN_WIDTH - self.rect.width)
+            self.rect.y = random.randrange(-100, -40)
+            self.speed_y = random.randrange(1, 5)
+
+
+# 敵の大きさに応じて音声を再生
+def play_enemy_down_sound(enemy_size):
+    if enemy_size == 1:
+        enemy_down_sound_1.play()
+    elif enemy_size == 2:
+        enemy_down_sound_2.play()
+    elif enemy_size == 3:
+        enemy_down_sound_3.play()
+        
+# 弾のクラス
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('bullet.png')  # 弾の画像
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+        self.speed_y = -5
+
+    def update(self):
+        self.rect.y += self.speed_y
+        if self.rect.bottom < 0:
+            self.kill()
+
+# ゲームの初期化
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("ベジタブルウォーズ")
+clock = pygame.time.Clock()
+
+# スプライトグループの作成
+all_sprites = pygame.sprite.Group()
+enemies = pygame.sprite.Group()
+
+player = Player()
+all_sprites.add(player)
+
+for i in range(10):
+    enemy_size = random.randint(1, 3)
+    enemy = Enemy(enemy_size)
+    all_sprites.add(enemy)
+    enemies.add(enemy)
+
+bullets = pygame.sprite.Group()
+
+
+# ゲームループ
+running = True
+while running:
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                bullet = Bullet(player.rect.centerx, player.rect.top)
+                all_sprites.add(bullet)
+                bullets.add(bullet)
+
+    for bullet in bullets:
+        if bullet.rect.bottom < 0:
+            bullet.kill()
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player.speed_x = -5
+    elif keys[pygame.K_RIGHT]:
+        player.speed_x = 5
+    else:
+        player.speed_x = 0
+
+    all_sprites.update()
+
+    #衝突判定
+    hits = pygame.sprite.groupcollide(bullets, enemies, True, True)
+    for hit in hits:   
+        enemy_size = random.randint(1, 3)
+        enemy = Enemy(enemy_size)
+        all_sprites.add(enemy)
+        enemies.add(enemy)
+
+    hits = pygame.sprite.spritecollide(player, enemies, False)
+    if hits:
+        running = False
+
+    screen.fill(WHITE)
+    all_sprites.draw(screen)
+
+    if not running:
+        # ゲームオーバー時に文字を表示
+        font = pygame.font.SysFont(None, 36)
+        text = font.render("Game Over", True, BLACK)
+        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - text.get_height() // 2))
+        # 1秒待機
+        pygame.display.flip()
+        time.sleep(1)
+
+    pygame.display.flip()
+
+    screen.fill(WHITE) # 背景を白で塗りつぶす
+    all_sprites.draw(screen) # スプライトを描画する
+    pygame.display.flip() # 画面を更新する
+    clock.tick(60) # フレームレートを60に設定
+
+print("end")
+pygame.quit() # Pygameを終了する
