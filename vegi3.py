@@ -39,9 +39,9 @@ pygame.init()
 
 
 # サウンドのロード
-enemy_down_sound_1 = pygame.mixer.Sound('sound1.wav')
-enemy_down_sound_2 = pygame.mixer.Sound('sound2.wav')
-enemy_down_sound_3 = pygame.mixer.Sound('sound3.wav')
+enemy_down_sound_1 = pygame.mixer.Sound('files/sound1.wav')
+enemy_down_sound_2 = pygame.mixer.Sound('files/sound2.wav')
+enemy_down_sound_3 = pygame.mixer.Sound('files/sound3.wav')
 pygame.mixer.set_num_channels(16) 
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -115,7 +115,7 @@ def draw_score(screen, score, gameover):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load("ninjin4b.png") # プレイヤーの画像を読み込む
+        self.image = pygame.image.load("files/ninjin4b.png") # プレイヤーの画像を読み込む
         self.rect = self.image.get_rect()
         self.rect.centerx = SCREEN_WIDTH // 2
         self.rect.bottom = SCREEN_HEIGHT - 10
@@ -136,7 +136,7 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, size):
         super().__init__()
-        self.image = pygame.image.load('nin-enemy5.png')
+        self.image = pygame.image.load('files/nin-enemy5.png')
         self.size =size
         if size == 1:
             self.image = pygame.transform.scale(self.image, (50, 50))
@@ -175,7 +175,7 @@ def play_enemy_down_sound(enemy_size):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.image.load('bullet.png')  # 弾の画像
+        self.image = pygame.image.load('files/bullet.png')  # 弾の画像
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
