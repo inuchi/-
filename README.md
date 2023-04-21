@@ -15,6 +15,10 @@
 ```
 python3 vegi3.py
 ```
+- または
+```
+python vegi3.py
+```
 
 ## 操作方法
 - 移動
