@@ -1,6 +1,7 @@
 import pygame
 import random
 import time
+import math
 
 # ウィンドウのサイズ
 SCREEN_WIDTH = 800
@@ -82,8 +83,7 @@ def draw_score(screen, score, gameover):
         posx = SCREEN_WIDTH // 2 - text.get_width() // 2
         posy = SCREEN_HEIGHT // 2 - text.get_height() // 2 + 20
         screen.blit(text, (posx, posy))
-
-
+        # スコアを保存, 読み出し
         save_score(score)
         scores = load_scores()
         # ランキングを表示する関数
@@ -173,21 +173,24 @@ def play_enemy_down_sound(enemy_size):
         
 # 弾のクラス
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, wide=0):
         super().__init__()
         self.image = pygame.image.load('files/bullet.png')  # 弾の画像
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
         self.speed_y = -5
+        self.wide = wide
 
     def update(self):
+        dx = math.sin(self.rect.y / 100 * 2* math.pi) *self.wide
+        self.rect.x += dx
         self.rect.y += self.speed_y
         if(self.rect.y < 0):
             self.kill()
 
 
-# 豆のクラス
+# パワーアップ豆のクラス
 class Bean(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -236,23 +239,23 @@ while running:
                 bullet = Bullet(player.rect.centerx, player.rect.top)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
-                # パワーアップ弾
+                # パワーアップ弾発射
                 if(player_powered_up==1):
-                    bullet = Bullet(player.rect.centerx+10, player.rect.top)
+                    bullet = Bullet(player.rect.centerx+5, player.rect.top,5)
                     all_sprites.add(bullet)
                     bullets.add(bullet)
                 elif(player_powered_up ==2):
-                    bullet = Bullet(player.rect.centerx+20, player.rect.top)
+                    bullet = Bullet(player.rect.centerx+10, player.rect.top,8)
                     all_sprites.add(bullet)
                     bullets.add(bullet)
-                    bullet = Bullet(player.rect.centerx-20, player.rect.top)
+                    bullet = Bullet(player.rect.centerx-10, player.rect.top,-8)
                     all_sprites.add(bullet)
                     bullets.add(bullet)
                 elif(player_powered_up >2):
-                    bullet = Bullet(player.rect.centerx+40, player.rect.top)
+                    bullet = Bullet(player.rect.centerx+20, player.rect.top,15)
                     all_sprites.add(bullet)
                     bullets.add(bullet)
-                    bullet = Bullet(player.rect.centerx-40, player.rect.top)
+                    bullet = Bullet(player.rect.centerx-20, player.rect.top,-15)
                     all_sprites.add(bullet)
                     bullets.add(bullet)                    
     # 弾が上まで到達したら消去
