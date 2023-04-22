@@ -89,9 +89,9 @@ def draw_score(screen, score, gameover):
         # ランキングを表示する関数
         scores.sort(reverse=True) # スコアを降順にソート
         rank=-1
-        print("Ranking:")
+        #print("Ranking:")
         for i, rankscore in enumerate(scores):
-            print("Rank {}: {}".format(i+1,rankscore))
+            #print("Rank {}: {}".format(i+1,rankscore))
             if((score ==rankscore) and (rank==-1)):
                 rank = i+1
         # ランク表示
@@ -163,13 +163,10 @@ class Enemy(pygame.sprite.Sprite):
 def play_enemy_down_sound(enemy_size):
     if enemy_size == 1:
         enemy_down_sound_1.play()
-        print("1")
     elif enemy_size == 2:
         enemy_down_sound_2.play()
-        print("2")
     elif enemy_size == 3:
         enemy_down_sound_3.play()
-        print("3")
         
 # 弾のクラス
 class Bullet(pygame.sprite.Sprite):
@@ -192,11 +189,19 @@ class Bullet(pygame.sprite.Sprite):
 
 # パワーアップ豆のクラス
 class Bean(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,type):
         super().__init__()
-        self.image = pygame.image.load("files/beans_s.png").convert_alpha()  # 豆の画像を読み込み
+        if(type==0):
+            # bad
+            self.image = pygame.image.load("files/beans3c_bad_s.png").convert_alpha()  # 豆の画像を読み込み
+            self.type=-1
+        else:
+            # good
+            self.image = pygame.image.load("files/beans_s.png").convert_alpha()  # 豆の画像を読み込み
+            self.type=1
         self.rect = self.image.get_rect()
         self.speed_y = 3 # 仮
+
 
     def update(self):
         self.rect.y += self.speed_y  # 豆の落下速度
@@ -279,14 +284,14 @@ while running:
         # 弾があたった
         enemy_size = enemy.size
         score += 1
-        print("size= "+str(enemy_size)+", score= "+str(score))
+#        print("size= "+str(enemy_size)+", score= "+str(score))
         play_enemy_down_sound(enemy_size)
         # 敵が size = 2 のときだけ
         if(enemy.size==2):
             bonus = random.randrange(0, 20)
-            if(bonus >17):
+            if(bonus <3):
                 # パワーアップ豆を追加
-                bean = Bean()
+                bean = Bean(bonus)
                 bean.rect.x = enemy.rect.x
                 bean.rect.y = enemy.rect.y
                 bean.speed_y = enemy.speed_y / 3 + 1
@@ -296,17 +301,26 @@ while running:
         enemy.rect.x = random.randrange(0, SCREEN_WIDTH - enemy.rect.width)
         enemy.rect.y = random.randrange(-100, -40)
         enemy.speed_y = random.randrange(1, 5)
-    # パワーアップ豆との当たり判定
-    power_up_hits = pygame.sprite.spritecollide(player, beans, True)
-    for power_up_hit in power_up_hits:
-        power_up_hit.kill()
-        player_powered_up += 1 # パワーアップ
-        player_powered_up %= 4 # maxになったら0に戻る（パワーダウン)
-    #自分の衝突判定
+    # 自分と敵との衝突判定
     hits = pygame.sprite.spritecollide(player, enemies, False)
     if hits:
         # 敵にあたったらゲーム終了
         running = False
+    # 自分とパワーアップ豆との当たり判定
+    for bean in beans:
+
+        if bean.rect.colliderect(player.rect):
+            if(bean.type==-1):
+                min = 0
+                if(player_powered_up > min):
+                    player_powered_up -= 1 # パワーダウン
+                    print("(down) current power= "+str(player_powered_up)+"")
+            else:
+                max = 4
+                if(player_powered_up < max):
+                    player_powered_up += 1 # パワーアップ
+                    print("(up) current power= "+str(player_powered_up))
+            bean.kill()
 
     # 描画
     colorBG = (255,241,0)
