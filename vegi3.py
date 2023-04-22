@@ -13,7 +13,9 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
-
+# 描画色
+colorBG = (255,238,125)
+colorSCORE =(244,156,45)
 # スコアを保存するファイル名
 SCORE_FILE = "scores.txt"
 
@@ -323,10 +325,6 @@ while running:
             bean.kill()
 
     # 描画
-    colorBG = (255,241,0)
-    colorSCORE =(237,109,70)
-    # colorBG = (255,235,39)
-    # colorSCORE =(232,56,47)
     screen.fill(colorBG) # 背景を塗りつぶす
     
     # 再描画
