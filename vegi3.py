@@ -183,7 +183,6 @@ class Bullet(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.y += self.speed_y
-
         if(self.rect.y < 0):
             self.kill()
 
@@ -194,7 +193,7 @@ class Bean(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("files/beans_s.png").convert_alpha()  # 豆の画像を読み込み
         self.rect = self.image.get_rect()
-        self.speed_y = 20
+        self.speed_y = 3 # 仮
 
     def update(self):
         self.rect.y += self.speed_y  # 豆の落下速度
@@ -206,23 +205,25 @@ class Bean(pygame.sprite.Sprite):
 # スプライトグループの作成
 all_sprites = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
 beans = pygame.sprite.Group()
 
+# プレイヤーの生成
 player = Player()
 all_sprites.add(player)
 
+# 敵の生成
 for i in range(10):
     enemy_size = random.randint(1, 3)
     enemy = Enemy(enemy_size)
     all_sprites.add(enemy)
     enemies.add(enemy)
 
-bullets = pygame.sprite.Group()
 
 
 # ゲームループ
 running = True
-player_powered_up = False
+player_powered_up = 0
 score = 0
 while running:
     # キー操作
@@ -231,16 +232,29 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                # 発射
+                # 通常弾発射
                 bullet = Bullet(player.rect.centerx, player.rect.top)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
                 # パワーアップ弾
-                if(player_powered_up):
+                if(player_powered_up==1):
                     bullet = Bullet(player.rect.centerx+10, player.rect.top)
                     all_sprites.add(bullet)
                     bullets.add(bullet)
-                    
+                elif(player_powered_up ==2):
+                    bullet = Bullet(player.rect.centerx+20, player.rect.top)
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)
+                    bullet = Bullet(player.rect.centerx-20, player.rect.top)
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)
+                elif(player_powered_up >2):
+                    bullet = Bullet(player.rect.centerx+40, player.rect.top)
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)
+                    bullet = Bullet(player.rect.centerx-40, player.rect.top)
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)                    
     # 弾が上まで到達したら消去
     for bullet in bullets:
         if bullet.rect.bottom < 0:
@@ -266,13 +280,13 @@ while running:
         play_enemy_down_sound(enemy_size)
         # 敵が size = 2 のときだけ
         if(enemy.size==2):
-            #bonus = random.randrange(0, 20)
-            bonus = 0
-            if(bonus == 0):
+            bonus = random.randrange(0, 20)
+            if(bonus >17):
                 # パワーアップ豆を追加
                 bean = Bean()
                 bean.rect.x = enemy.rect.x
                 bean.rect.y = enemy.rect.y
+                bean.speed_y = enemy.speed_y / 3 + 1
                 beans.add(bean)
                 all_sprites.add(bean)
         # 敵は再利用して上から出す
@@ -283,7 +297,8 @@ while running:
     power_up_hits = pygame.sprite.spritecollide(player, beans, True)
     for power_up_hit in power_up_hits:
         power_up_hit.kill()
-        player_powered_up = True # パワーアップ状態を有効にする
+        player_powered_up += 1 # パワーアップ
+        player_powered_up %= 4 # maxになったら0に戻る（パワーダウン)
     #自分の衝突判定
     hits = pygame.sprite.spritecollide(player, enemies, False)
     if hits:
@@ -291,8 +306,10 @@ while running:
         running = False
 
     # 描画
-    colorBG = (255,235,39)
-    colorSCORE =(232,56,47)
+    colorBG = (255,241,0)
+    colorSCORE =(237,109,70)
+    # colorBG = (255,235,39)
+    # colorSCORE =(232,56,47)
     screen.fill(colorBG) # 背景を塗りつぶす
     
     # 再描画
