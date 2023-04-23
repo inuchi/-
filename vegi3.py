@@ -165,7 +165,7 @@ class Bean(pygame.sprite.Sprite):
         super().__init__()
         if(type==0):
             # bad
-            self.image = pygame.image.load("files/beans3c_bad_s.png").convert_alpha()  # 豆の画像を読み込み
+            self.image = pygame.image.load("files/beans4_bad_s.png").convert_alpha()  # 豆の画像を読み込み
             self.type=-1
         else:
             # good
