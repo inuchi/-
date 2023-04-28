@@ -1,0 +1,4 @@
+###### Requirements without Version Specifiers ######`
+pygame
+
+###### Requirements with Version Specifiers ######`
