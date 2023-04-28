@@ -45,16 +45,16 @@ def draw_score(screen, goodscore, badscore, gameover):
     if(gameover):
         # ゲームオーバー時に文字を表示
         font = pygame.font.SysFont(None, 136)
-        text = font.render("Game Over", True, colorSCORE)
+        text = font.render("Game Over", True, colorSCORE_inner)
         posx = SCREEN_WIDTH // 2 - text.get_width() // 2
         posy = SCREEN_HEIGHT // 2 - text.get_height() // 2 -50
         screen.blit(text, (posx, posy))
         # プラス/マイナススコア表示
         font = pygame.font.SysFont(None, 80) 
         if(badscore<0):
-            text = font.render("score:"+str(goodscore)+str(badscore), True, colorSCORE)
+            text = font.render("score:"+str(goodscore)+str(badscore), True, colorSCORE_inner)
         else:
-            text = font.render("score:"+str(goodscore), True, colorSCORE)
+            text = font.render("score:"+str(goodscore), True, colorSCORE_inner)
         posx = SCREEN_WIDTH // 2 - text.get_width() // 2
         posy = SCREEN_HEIGHT // 2 - text.get_height() // 2 + 20
         screen.blit(text, (posx, posy))
@@ -65,14 +65,14 @@ def draw_score(screen, goodscore, badscore, gameover):
         # ランキングを表示する
         scores.sort(reverse=True) # スコアを降順にソート
         rank=-1
-        print("Ranking:")
+        #print("Ranking:")
         for i, rankscore in enumerate(scores):
-            print("Rank {}: {}".format(i+1,rankscore))
+            #print("Rank {}: {}".format(i+1,rankscore))
             if((totalscore ==rankscore) and (rank==-1)):
                 rank = i+1
         # ランク表示
         font = pygame.font.SysFont(None, 60) 
-        text = font.render("rank: "+str(rank)+" / "+str(len(scores)), True, colorSCORE)
+        text = font.render("rank: "+str(rank)+" / "+str(len(scores)), True, colorSCORE_inner)
         posx = SCREEN_WIDTH // 2 - text.get_width() // 2
         posy = SCREEN_HEIGHT // 2 - text.get_height() // 2 + 80
         screen.blit(text, (posx, posy))
@@ -80,12 +80,12 @@ def draw_score(screen, goodscore, badscore, gameover):
     else:
         # 通常のスコア表示
         font = pygame.font.SysFont(None, 236) 
-        text = font.render(str(goodscore), True, colorSCORE)
+        text = font.render(str(goodscore), True, colorSCORE_inner)
         posx = SCREEN_WIDTH // 2 - text.get_width() // 2
-        posy = SCREEN_HEIGHT // 2 - text.get_height() // 2
+        posy = SCREEN_HEIGHT // 2 - text.get_height() // 2 - 80
         screen.blit(text, (posx, posy))
         # 落下到達したスコア
-        text = font.render(str(badscore), True, colorSCORE)
+        text = font.render(str(badscore), True, colorSCORE_inner)
         posx = SCREEN_WIDTH // 2 - text.get_width() // 2
         posy = SCREEN_HEIGHT // 4 * 3 - text.get_height() // 2
         screen.blit(text, (posx, posy))
@@ -115,24 +115,44 @@ class Player(pygame.sprite.Sprite):
 
 # 敵のクラス
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, size):
+    def __init__(self, type, size):
         super().__init__()
-        self.image = pygame.image.load('files/nin-enemy5.png')
-        self.size =size
+        self.type = type
+        #----
+        if(type == 1):
+            self.image = pygame.image.load('files/nin-enemy5.png')
+        else:
+            self.image = pygame.image.load('files/blockoly-3c.png')
+        #----
+        self.size = size
         if size == 1:
             self.image = pygame.transform.scale(self.image, (50, 50))
             self.rect = self.image.get_rect()
         elif size == 2:
             self.image = pygame.transform.scale(self.image, (75, 75))
             self.rect = self.image.get_rect()
-        else:
+        else:            
             self.image = pygame.transform.scale(self.image, (100, 100))
             self.rect = self.image.get_rect()
+
+        print("type="+str(type)+" size="+str(size))
         self.rect.x = random.randrange(0, SCREEN_WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
         self.speed_y = random.randrange(1, 5)
     def updateScore(self):
-        self.rect.y += self.speed_y
+        # bad スコア更新のために、ここで敵の位置を更新する
+        if(self.type == 1):
+            self.rect.y += self.speed_y
+        else:   
+            if(self.size==1):
+                self.rect.y += self.speed_y
+                self.rect.x = self.rect.y
+            elif(self.size==2):
+                self.rect.y += self.speed_y
+                self.rect.x = SCREEN_WIDTH - self.rect.y
+            else:
+                self.rect.y += self.speed_y
+                self.rect.x += math.sin(self.rect.y*0.1)*5
         if self.rect.y > SCREEN_HEIGHT:
             self.rect.x = random.randrange(0, SCREEN_WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100, -40)
@@ -158,29 +178,35 @@ def play_enemy_down_sound(enemy_size):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, wide=0, speed_x=0, speed_y=0):
         super().__init__()
-        self.image = pygame.image.load('files/bullet.png')  # 弾の画像
+        self.image_org = pygame.image.load('files/bullet-Lw.png')  # 弾の画像
+        resized_image = pygame.transform.scale(self.image_org, (10,10))
+        self.image = resized_image
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
+        self.initial_x = x
         if((speed_x==0)and(speed_y==0)):
-            self.speed_y = -5   # 停止は上に
+            self.speed_y = -5   # speed(0,0)(=停止)は上向きに
         else:
             self.speed_y = speed_y
         self.speed_x = speed_x
         self.wide = wide
 
     def update(self):
-        dx = math.sin(self.rect.y / 100 * 2* math.pi) *self.wide
-        self.rect.x += dx   # 曲線
-        self.rect.x += self.speed_x
-        self.rect.y += self.speed_y
+        if(self.wide!=0):
+            dx = math.sin(self.rect.y / 100 * 2* math.pi) *self.wide
+            self.rect.centerx = self.initial_x + dx
+            self.rect.centery += self.speed_y
+        else:
+            self.rect.centerx += self.speed_x
+            self.rect.centery += self.speed_y
         if(self.rect.y < 0):
             self.kill()
 # 拡散弾のクラス
 class SplashBullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, z, wide=0, type=0):
+    def __init__(self, x, y, z, wide=0, numofbullet=3):
         super().__init__()        
-        self.image_org =  pygame.image.load('files/bullet_L.png')  # 弾の画像
+        self.image_org =  pygame.image.load('files/bullet-Lw.png')  # 弾の画像
         self.image = pygame.transform.scale(self.image_org, (20+z, 20+z))
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -190,15 +216,14 @@ class SplashBullet(pygame.sprite.Sprite):
         self.speed_y = -1.5
         self.speed_z = 1
         self.accel_z = -0.02
-        self.wide = wide
-        self.type = type
+        self.numofbullet = numofbullet
         self.timer = 0
         self.wide = wide
     def update(self):
         if((self.timer>0)and(self.pos_z<0.1)):
             #spread
             i=0
-            while(i<30):
+            while(i<self.numofbullet):
                 rx = random.randrange(-10,10)
                 ry = random.randrange(-10,10)
                 bullet = Bullet(self.rect.centerx, self.rect.centery, 0, rx, ry )
@@ -215,9 +240,11 @@ class SplashBullet(pygame.sprite.Sprite):
             self.speed_z += a 
             #self.accel_z = a # same
             self.image = pygame.transform.scale(self.image_org, (20+z, 20+z))
-            #ゆらゆら
-            dx = math.sin(self.rect.y / 100* math.pi) * self.wide
-            self.rect.centerx = self.straightx +dx
+            # ゆらゆら
+            if(self.speed_z<0): # 下に落ちるときだけ
+                dx = math.sin(self.rect.y / 100* math.pi) * self.wide
+                self.rect.centerx = self.straightx +dx
+            # すすむ
             self.rect.centery += self.speed_y 
             self.timer += 1    
         else:
@@ -277,8 +304,11 @@ if __name__ == '__main__':
     GREEN = (0, 255, 0)
     RED = (255, 0, 0)
     # 描画色
-    colorBG = (255,238,125)
-    colorSCORE =(244,156,45)
+    colorBG = (6,26,50)
+    #colorSCORE_outer =(
+    colorSCORE_outer = ((0,155,155),(33,188,188),(66,200,200),(155,0,250),(244,247,249),(44,248,252),(33,247,249),(155,248,252),(160,247,249),(155,248,252))
+    #colorSCORE_inner = (201,243,247)
+    colorSCORE_inner = (155,243,247)
 
     # スプライトグループの作成
     all_sprites = pygame.sprite.Group()
@@ -292,8 +322,9 @@ if __name__ == '__main__':
 
     # 敵の生成
     for i in range(10):
-        enemy_size = random.randint(1, 3)
-        enemy = Enemy(enemy_size)
+        enemy_type = random.randint(1, 3)
+        enemy_size = random.randint(1, 4)
+        enemy = Enemy(enemy_type, enemy_size)
         all_sprites.add(enemy)
         enemies.add(enemy)
 
@@ -317,32 +348,33 @@ if __name__ == '__main__':
                     bullets.add(bullet)
                     # パワーアップ弾発射
                     if(player_powered_up==1):
-                        bullet = Bullet(player.rect.centerx+5, player.rect.top,5)
+                        bullet = Bullet(player.rect.centerx, player.rect.top,8)
                         all_sprites.add(bullet)
                         bullets.add(bullet)
                     elif(player_powered_up ==2):
-                        bullet = Bullet(player.rect.centerx+10, player.rect.top,8)
+                        bullet = Bullet(player.rect.centerx+10, player.rect.top,12)
                         all_sprites.add(bullet)
                         bullets.add(bullet)
-                        bullet = Bullet(player.rect.centerx-10, player.rect.top,-8)
+                        bullet = Bullet(player.rect.centerx-10, player.rect.top,-12)
                         all_sprites.add(bullet)
                         bullets.add(bullet)
                     elif(player_powered_up ==3):
-                        bullet = Bullet(player.rect.centerx+20, player.rect.top,15)
+                        bullet = Bullet(player.rect.centerx+20, player.rect.top,17)
                         all_sprites.add(bullet)
                         bullets.add(bullet)
-                        bullet = Bullet(player.rect.centerx-20, player.rect.top,-15)
+                        bullet = Bullet(player.rect.centerx-20, player.rect.top,-17)
                         all_sprites.add(bullet)
-                        bullets.add(bullet)   
                     elif(player_powered_up >3):
                         x=player.rect.centerx
                         y=player.rect.top
                         z=0
-                        bullet = SplashBullet(x, y, z, 10)
+                        wide = 30   # ゆらゆらの幅
+                        bullet_num = player_powered_up  # 拡散弾の数
+                        bullet = SplashBullet(x, y, z, wide, bullet_num)
                         all_sprites.add(bullet)
                         bullets.add(bullet)
                                        
-        # 弾が上まで到達したら消去
+        # 弾が上端まで到達したら消去
         for bullet in bullets:
             if bullet.rect.bottom < 0:
                 bullet.kill()
@@ -370,7 +402,8 @@ if __name__ == '__main__':
         #hits = pygame.sprite.groupcollide(enemies, bullets, False, True) # 第3引数を False に変更して敵を削除しないようにする
         # Circle(丸)同士で比較
         #hits = pygame.sprite.groupcollide(enemies, bullets, False, False, pygame.sprite.collide_circle_ratio(0.55))
-        hits = pygame.sprite.groupcollide(enemies, bullets, False, False, pygame.sprite.collide_circle_ratio(0.75))
+        #hits = pygame.sprite.groupcollide(enemies, bullets, False, False, pygame.sprite.collide_circle_ratio(0.75))
+        hits = pygame.sprite.groupcollide(enemies, bullets, False, True, pygame.sprite.collide_circle_ratio(0.75))
         # マスク同士を比較して当たり判定を行う
         #if sprite_mask.overlap(target_mask, sprite_mask):
         #if sprite_mask.overlap(target_mask, (0,0)):
@@ -386,7 +419,6 @@ if __name__ == '__main__':
                 print("bonus rand-value: "+str(bonus))
                 if(bonus <3):
                     print("(added)")
-
                     # パワーアップ豆を追加
                     bean = Bean(bonus)
                     bean.rect.x = enemy.rect.x
@@ -395,9 +427,14 @@ if __name__ == '__main__':
                     beans.add(bean)
                     all_sprites.add(bean)
             # 敵は再利用して上から出す
-            enemy.rect.x = random.randrange(0, SCREEN_WIDTH - enemy.rect.width)
-            enemy.rect.y = random.randrange(-100, -40)
-            enemy.speed_y = random.randrange(1, 5)
+            enemy.kill()
+            type = random.randrange(1, 3)
+            size = random.randrange(1, 4)
+            enemy_new = Enemy(type, size)
+            speed_y = random.randrange(1, 5)
+            all_sprites.add(enemy_new)
+            enemies.add(enemy_new)
+
         # 自分と敵との衝突判定
         hits = pygame.sprite.spritecollide(player, enemies, False)
         if hits:
