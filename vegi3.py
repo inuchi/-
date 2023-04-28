@@ -122,7 +122,8 @@ class Enemy(pygame.sprite.Sprite):
         if(type == 1):
             self.image = pygame.image.load('files/nin-enemy5.png')
         else:
-            self.image = pygame.image.load('files/blockoly-3c.png')
+            # self.image = pygame.image.load('files/blockoly-3c.png')
+            self.image = pygame.image.load('files/blockoly-5.png')            
         #----
         self.size = size
         if size == 1:
@@ -449,7 +450,7 @@ if __name__ == '__main__':
                         player_powered_up -= 1 # パワーダウン
                         print("(down) current power= "+str(player_powered_up)+"")
                 else:
-                    max = 4
+                    max = 10
                     if(player_powered_up < max):
                         player_powered_up += 1 # パワーアップ
                         print("(up) current power= "+str(player_powered_up))
