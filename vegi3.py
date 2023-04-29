@@ -243,7 +243,7 @@ class SplashBullet(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(self.image_org, (20+z, 20+z))
             # ゆらゆら
             if(self.speed_z<0): # 下に落ちるときだけ
-                dx = math.sin(self.rect.y / 100* math.pi) * self.wide
+                dx = math.sin(self.speed_z / 100* math.pi) * self.wide
                 self.rect.centerx = self.straightx +dx
             # すすむ
             self.rect.centery += self.speed_y 
