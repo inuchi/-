@@ -57,6 +57,8 @@ def draw_score(screen, goodscore, badscore, gameover):
             text = font.render("score: "+str(goodscore), True, colorSCORE_inner)
         posx = WIDTH_OF_SCREEN // 2 - text.get_width() // 2
         posy = HEIGHT_OF_SCREEN // 2 - text.get_height() // 2 + 20
+
+
         screen.blit(text, (posx, posy))
         # スコアを保存, 読み出し
         totalscore = goodscore - badscore
@@ -268,7 +270,9 @@ class SplashBullet(pygame.sprite.Sprite):
             i=0
             while(i<self.numofbullet):
                 rnd_x = random.randrange(-8,13)
-                rnd_y = random.randrange(-8,13)
+                rnd_y = random.randrange(-8,9)
+                if((rnd_x <= -1)and(rnd_y==0)):
+                   rand_x = 1   # 手前には進めない -> 右へ
                 bullet = Bullet(self.rect.centerx, self.rect.centery, rnd_x, rnd_y,0)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
