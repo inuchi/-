@@ -14,11 +14,11 @@ vegi-wars
 ## 実行方法
 - 以下のコマンドを入力します
 ```
-python3 vegi3.py
+python3 vegi.py
 ```
 - または
 ```
-python vegi3.py
+python vegi.py
 ```
 
 ## 操作方法
