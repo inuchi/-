@@ -124,6 +124,7 @@ class Enemy(pygame.sprite.Sprite):
         else:
             self.image = pygame.image.load('files/blockoly-5.png')            
         #----
+        # サイズ変形
         self.size = size
         if size == 1:
             self.image = pygame.transform.scale(self.image, (30, 30))
@@ -135,31 +136,34 @@ class Enemy(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(self.image, (60, 60))
             self.rect = self.image.get_rect()
 
-        size = self.rect.x
+        # 位置と速度
+        size = self.rect.height
         if(type==1): #葉っぱ
             self.rect.x = WIDTH_OF_SCREEN
             self.rect.y = random.randrange(0+size, HEIGHT_OF_SCREEN-size)   # 画面両端にマージン
             self.speed_x = random.randrange(-5, -1)
+            self.speed_y = 0
         else: #ブロッコリー
             print("type="+str(type)+" size="+str(size))
             self.rect.x = WIDTH_OF_SCREEN
+            self.speed_x = random.randrange(-5, -1)
             if(size==1):
                 self.rect.y = size
                 self.speed_y = 1
             elif(size==2):
                 self.rect.y = WIDTH_OF_SCREEN - size
-                self.speed_y = -1
+                self.speed_y =  -1
             else:
                 self.rect.y = random.randrange(size, HEIGHT_OF_SCREEN-size) # マージン10
                 self.speed_y = 0
-        self.straight_y = self.rect.y #直進時の軌道
-        self.speed_x = random.randrange(-2, 0)
+            self.straight_y = self.rect.y #直進時の軌道
     def updateEnemy(self):
         # （bad スコア更新のために）敵の位置をここで更新する
-        self.rect.x += self.speed_x
         # 敵の種類による位置更新
         if(self.type == 1): # 敵の種類
+            # 葉っぱ
             self.rect.x += self.speed_x # 位置更新
+            self.rect.y += self.speed_y 
             if(self.rect.x<0):
                 self.rect.x = WIDTH_OF_SCREEN
                 size = self.rect.height
@@ -170,6 +174,9 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.y += self.speed_y
             if(self.size==3):   # 大きい
                 self.rect.y = self.straight_y +math.sin(self.rect.x/30)*10  # ゆらゆら
+            else:
+                print("speed_x: "+str(self.speed_x))
+                print("speed_y: "+str(self.speed_y))
         if self.rect.x < 0: # 左端まできたら更新
             self.rect.x = WIDTH_OF_SCREEN
             spsize = self.rect.height
@@ -249,7 +256,7 @@ class SplashBullet(pygame.sprite.Sprite):
         self.timer = 0
     def update(self):
         self.timer+=1
-        if((self.timer>60)):    # timer経過
+        if((self.timer>100)):    # timer経過
             #spread
             i=0
             while(i<self.numofbullet):
@@ -299,7 +306,7 @@ if __name__ == '__main__':
     pygame.mixer.set_num_channels(16) 
 
     # ウィンドウのサイズ
-    WIDTH_OF_SCREEN = 1200
+    WIDTH_OF_SCREEN = 1000
     HEIGHT_OF_SCREEN= 600
 
     # スコアを保存するファイル名
@@ -364,8 +371,7 @@ if __name__ == '__main__':
                     bullets.add(bullet)
 
                     # パワーアップ弾発射
-                    #if(player_powered_up <3):
-                    if(0):
+                    if(player_powered_up <=3):
                         # ノーマルパワーアップ
                         offset = -1 * player_powered_up * 5
                         speed = 10
@@ -389,7 +395,7 @@ if __name__ == '__main__':
                         bullets.add(bullet)
 
                                        
-        # 弾が左端まで到達したら消去
+        # 弾が右端まで到達したら消去
         for bullet in bullets:
             if bullet.rect.right < 0:
                 bullet.kill()
@@ -422,13 +428,13 @@ if __name__ == '__main__':
             play_enemy_down_sound(enemy_size)
             # 敵が size <= 2 のときだけ
             if(enemy.size<=2):
-                bonus = random.randrange(0, 10)
+                bonus = random.randrange(0, 100)
                 print("bonus rand-value: "+str(bonus))
-                if(bonus <7):
+                if(bonus <20):
                     print("(added)")
                     # パワーアップ豆を追加
                     speed_x = enemy.speed_x / 3 - 1
-                    if(bonus<8):
+                    if(bonus<14):
                         bean = Bean(GOODBEAN, speed_x)  # good
                     else:
                         bean = Bean(BADBEAN, speed_x)  # bad
@@ -436,18 +442,21 @@ if __name__ == '__main__':
                     bean.rect.y = enemy.rect.y
                     beans.add(bean)
                     all_sprites.add(bean)
-            # 敵は再利用して右から出す
+            # 敵はすぐに右から出す
             enemy.kill()
             type = random.randrange(1, 3)
             size = random.randrange(1, 4)
             # size とtype は更新
             enemy_new = Enemy(type, size)
-            speed_x = random.randrange(-4, -1)
+            enemy_new.speed_y = 1
+            #enemy_new.speed_y = 5
+            print("speed_y_2="+str(enemy_new.speed_y))
             all_sprites.add(enemy_new)
             enemies.add(enemy_new)
 
         # 自分と敵との衝突判定
-        hits = pygame.sprite.spritecollide(player, enemies, False)
+        #hits = pygame.sprite.spritecollide(player, enemies, False)
+        hits = pygame.sprite.spritecollide(player, enemies, False, pygame.sprite.collide_circle_ratio(0.6))
         if hits:
             # 敵にあたったらゲーム終了
             running = False
