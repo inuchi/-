@@ -52,9 +52,9 @@ def draw_score(screen, goodscore, badscore, gameover):
         # プラス/マイナススコア表示
         font = pygame.font.SysFont(None, 80) 
         if(badscore<0):
-            text = font.render("score:"+str(goodscore)+str(badscore), True, colorSCORE_inner)
+            text = font.render("score: "+str(goodscore)+str(badscore), True, colorSCORE_inner)
         else:
-            text = font.render("score:"+str(goodscore), True, colorSCORE_inner)
+            text = font.render("score: "+str(goodscore), True, colorSCORE_inner)
         posx = WIDTH_OF_SCREEN // 2 - text.get_width() // 2
         posy = HEIGHT_OF_SCREEN // 2 - text.get_height() // 2 + 20
         screen.blit(text, (posx, posy))
@@ -97,29 +97,35 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load("files/ninjin4b.png") # プレイヤーの画像を読み込む
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect() 
         self.rect.x = 20
         self.rect.centery = HEIGHT_OF_SCREEN
+        self.speed_x = 0
         self.speed_y = 0
 
     def update(self):
+        self.rect.x += self.speed_x
         self.rect.y += self.speed_y
         if (self.rect.centery < 0):
             self.rect.centery = 0
         if (self.rect.centery > HEIGHT_OF_SCREEN):
             self.rect.centery = HEIGHT_OF_SCREEN
+        if (self.rect.centerx < 0):
+            self.rect.centerx = 0
+        if (self.rect.centerx >= self.rect.width*3):
+            self.rect.centerx = self.rect.width*3
 
     def shoot(self):
         # 弾を撃つ処理をここに追加する
         pass
 
 # 敵のクラス
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self, type, size):
+class SpaceEnemy(pygame.sprite.Sprite):
+    def __init__(self, type, size, speed_x=-5):
         super().__init__()
         self.type = type
         #----
-        if(type == 1):
+        if(type == GREEN_LEAF):
             self.image = pygame.image.load('files/nin-enemy5.png')
         else:
             self.image = pygame.image.load('files/blockoly-5.png')            
@@ -138,50 +144,42 @@ class Enemy(pygame.sprite.Sprite):
 
         # 位置と速度
         size = self.rect.height
-        if(type==1): #葉っぱ
+        if(type==BROCCOLI): #ブロッコリー
             self.rect.x = WIDTH_OF_SCREEN
-            self.rect.y = random.randrange(0+size, HEIGHT_OF_SCREEN-size)   # 画面両端にマージン
-            self.speed_x = random.randrange(-5, -1)
-            self.speed_y = 0
-        else: #ブロッコリー
-            print("type="+str(type)+" size="+str(size))
-            self.rect.x = WIDTH_OF_SCREEN
-            self.speed_x = random.randrange(-5, -1)
-            if(size==1):
-                self.rect.y = size
+            self.rect.y = random.randrange(0+size, HEIGHT_OF_SCREEN//3*2)   # 画面両端にマージン
+            self.speed_x = speed_x
+            if(self.rect.y < HEIGHT_OF_SCREEN//2):
                 self.speed_y = 1
-            elif(size==2):
-                self.rect.y = WIDTH_OF_SCREEN - size
-                self.speed_y =  -1
-            else:
-                self.rect.y = random.randrange(size, HEIGHT_OF_SCREEN-size) # マージン10
+                print("----speed_y:   "+str(self.speed_y))
+            else: 
                 self.speed_y = 0
-            self.straight_y = self.rect.y #直進時の軌道
+                print("====speed_y:   "+str(self.speed_y))
+
+        else: #葉っぱ
+            self.rect.x = WIDTH_OF_SCREEN
+            self.rect.y = random.randrange(HEIGHT_OF_SCREEN*2//3, HEIGHT_OF_SCREEN-size)   # 画面両端にマージン
+            self.speed_x = speed_x
+            if(self.rect.y> HEIGHT_OF_SCREEN*2//3):
+                self.speed_y = -0.5
+            else:
+                self.speed_y = 0
+        self.straight_y = self.rect.y #直進時の軌道
     def updateEnemy(self):
         # （bad スコア更新のために）敵の位置をここで更新する
         # 敵の種類による位置更新
-        if(self.type == 1): # 敵の種類
-            # 葉っぱ
-            self.rect.x += self.speed_x # 位置更新
-            self.rect.y += self.speed_y 
-            if(self.rect.x<0):
-                self.rect.x = WIDTH_OF_SCREEN
-                size = self.rect.height
-                self.rect.y = random.randrange(size, HEIGHT_OF_SCREEN-size)
-        else:
-            # ブロッコリー   
-            self.rect.x += self.speed_x
-            self.rect.y += self.speed_y
-            if(self.size==3):   # 大きい
-                self.rect.y = self.straight_y +math.sin(self.rect.x/30)*10  # ゆらゆら
-            else:
-                print("speed_x: "+str(self.speed_x))
-                print("speed_y: "+str(self.speed_y))
+        self.rect.centerx += self.speed_x
+        self.rect.centery += self.speed_y 
+        
+        if(self.speed_y>0):
+            print("self_speed_y  "+str(self.speed_y))
+        
+        if(self.rect.centery > HEIGHT_OF_SCREEN-20):
+            self.rect.centery = HEIGHT_OF_SCREEN - 20
+        if(self.rect.centery < 20):
+            self.rect.centery = 10
         if self.rect.x < 0: # 左端まできたら更新
             self.rect.x = WIDTH_OF_SCREEN
-            spsize = self.rect.height
-            self.rect.y = random.randrange(spsize, HEIGHT_OF_SCREEN - spsize)
-
+            # マイナス1点
             return -1
         else:
             return 0
@@ -202,7 +200,7 @@ def play_enemy_down_sound(enemy_size):
         enemy_down_sound_1.play()
     elif enemy_size == 2:
         enemy_down_sound_2.play()
-    elif enemy_size == 3:
+    else:
         enemy_down_sound_3.play()
         
 # 通常弾のクラス
@@ -332,6 +330,8 @@ if __name__ == '__main__':
 
     GOODBEAN = 1
     BADBEAN = 2
+    GREEN_LEAF = 1
+    BROCCOLI = 2
     # スプライトグループの作成
     all_sprites = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
@@ -344,9 +344,14 @@ if __name__ == '__main__':
 
     # 敵の生成
     for i in range(10):
-        enemy_type = random.randint(1, 3)
+        e_type = random.randint(1, 3)
+        if(e_type == 1):
+            enemy_type = GREEN_LEAF
+        else:
+            enemy_type = BROCCOLI
         enemy_size = random.randint(1, 4)
-        enemy = Enemy(enemy_type, enemy_size)
+        enemy_speed_x = random.randrange(-5, -2)
+        enemy = SpaceEnemy(enemy_type, enemy_size, enemy_speed_x)
         all_sprites.add(enemy)
         enemies.add(enemy)
 
@@ -405,6 +410,10 @@ if __name__ == '__main__':
             player.speed_y = -5
         elif keys[pygame.K_DOWN]:
             player.speed_y = 5
+        elif keys[pygame.K_LEFT]:
+            player.speed_x = -5
+        elif keys[pygame.K_RIGHT]:
+            player.speed_x = 5
         else:
             player.speed_y = 0
 
@@ -444,13 +453,15 @@ if __name__ == '__main__':
                     all_sprites.add(bean)
             # 敵はすぐに右から出す
             enemy.kill()
-            type = random.randrange(1, 3)
-            size = random.randrange(1, 4)
+            type = random.randrange(1, 3)   # 1 or 2
+            if(type==1):
+                nextType = BROCCOLI
+            else:
+                nextType = GREEN_LEAF
+            size = random.randrange(1, 4)   # 1 - 3
+            speed_x = random.randrange(-5,-2) # -5 to -3
             # size とtype は更新
-            enemy_new = Enemy(type, size)
-            enemy_new.speed_y = 1
-            #enemy_new.speed_y = 5
-            print("speed_y_2="+str(enemy_new.speed_y))
+            enemy_new = SpaceEnemy(nextType, size, speed_x)
             all_sprites.add(enemy_new)
             enemies.add(enemy_new)
 
