@@ -371,7 +371,7 @@ if __name__ == '__main__':
                 if event.key == pygame.K_SPACE:
                     # 通常弾発射
                     speed = 10
-                    bullet = Bullet(player.rect.centerx, player.rect.centery,speed,0,0)
+                    bullet = Bullet(player.rect.right, player.rect.centery,speed,0,0)
                     all_sprites.add(bullet)
                     bullets.add(bullet)
 
@@ -380,13 +380,15 @@ if __name__ == '__main__':
                         # ノーマルパワーアップ
                         offset = -1 * player_powered_up * 5
                         speed = 10
-                        bullet = Bullet(player.rect.centerx, player.rect.centery+offset, speed, 0, 0)
+                        posx = player.rect.centerx + player.rect.width / 4
+                        posy = player.rect.centery
+                        bullet = Bullet(posx, posy+offset, speed, 0, 0)
                         all_sprites.add(bullet)
                         bullets.add(bullet)
                         # ----
                         offset = player_powered_up * 5
                         speed = 10
-                        bullet = Bullet(player.rect.centerx, player.rect.centery+offset, speed, 0, 0)
+                        bullet = Bullet(posx, posy+offset, speed, 0, 0)
                         bullets.add(bullet)
                         all_sprites.add(bullet)
 
