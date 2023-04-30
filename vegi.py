@@ -153,7 +153,7 @@ class SpaceEnemy(pygame.sprite.Sprite):
                 print("----speed_y:   "+str(self.speed_y))
             else: 
                 self.speed_y = 0
-                print("====speed_y:   "+str(self.speed_y))
+                #print("====speed_y:   "+str(self.speed_y))
 
         else: #葉っぱ
             self.rect.x = WIDTH_OF_SCREEN
@@ -171,7 +171,9 @@ class SpaceEnemy(pygame.sprite.Sprite):
         self.rect.centery += self.speed_y 
         
         if(self.speed_y>0):
-            print("self_speed_y  "+str(self.speed_y))
+            print("self_speed_y=  "+str(self.speed_y))
+            #self.speed_y = 0.3
+            print("self_speed_y-  "+str(self.speed_y))
         
         if(self.rect.centery > HEIGHT_OF_SCREEN-20):
             self.rect.centery = HEIGHT_OF_SCREEN - 20
@@ -179,6 +181,13 @@ class SpaceEnemy(pygame.sprite.Sprite):
             self.rect.centery = 10
         if self.rect.x < 0: # 左端まできたら更新
             self.rect.x = WIDTH_OF_SCREEN
+            size = self.rect.height
+            if(self.type == BROCCOLI):
+                self.rect.y = random.randrange(0+size, HEIGHT_OF_SCREEN//3*2)   # 画面両端にマージン
+            else:
+                self.rect.y = random.randrange(HEIGHT_OF_SCREEN//3*2-size)   # 画面両端にマージン
+
+
             # マイナス1点
             return -1
         else:
@@ -244,7 +253,7 @@ class SplashBullet(pygame.sprite.Sprite):
     def __init__(self, x, y,numofbullet=3):
         super().__init__()        
         self.image_org =  pygame.image.load('files/bullet-Lw.png')  # 弾の画像
-        self.image = pygame.transform.scale(self.image_org, (30, 30))
+        self.image = pygame.transform.scale(self.image_org, (15, 15))
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = y
@@ -304,8 +313,8 @@ if __name__ == '__main__':
     pygame.mixer.set_num_channels(16) 
 
     # ウィンドウのサイズ
-    WIDTH_OF_SCREEN = 1000
-    HEIGHT_OF_SCREEN= 600
+    WIDTH_OF_SCREEN = 1000.0
+    HEIGHT_OF_SCREEN= 600.0
 
     # スコアを保存するファイル名
     SCORE_FILE = "scores.txt"
