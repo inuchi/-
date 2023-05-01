@@ -122,6 +122,7 @@ class Player(pygame.sprite.Sprite):
         pass
 
 # 敵のクラス
+
 class SpaceEnemy(pygame.sprite.Sprite):
     def __init__(self, type, size, speed_x=-5):
         super().__init__()
@@ -129,8 +130,10 @@ class SpaceEnemy(pygame.sprite.Sprite):
         #----
         if(type == GREEN_LEAF):
             self.image = pygame.image.load('files/nin-enemy5.png')
-        else:
+        elif(type == BROCCOLI):
             self.image = pygame.image.load('files/blockoly-5.png')            
+        else:
+            self.image = pygame.image.load('files/pampkin.png')            
         #----
         # サイズ変形
         self.size = size
@@ -140,8 +143,14 @@ class SpaceEnemy(pygame.sprite.Sprite):
         elif size == 2:
             self.image = pygame.transform.scale(self.image, (45, 45))
             self.rect = self.image.get_rect()
-        else:            
+        elif size == 3:            
             self.image = pygame.transform.scale(self.image, (60, 60))
+            self.rect = self.image.get_rect()
+        elif size == 4:            
+            self.image = pygame.transform.scale(self.image, (70, 70))
+            self.rect = self.image.get_rect()
+        else:
+            self.image = pygame.transform.scale(self.image, (150, 100))
             self.rect = self.image.get_rect()
 
         # 位置と速度
@@ -341,10 +350,13 @@ if __name__ == '__main__':
     #colorSCORE_inner = (201,243,247)
     colorSCORE_inner = (155,243,247)
 
+    # 豆ID
     GOODBEAN = 1
     BADBEAN = 2
+    # 敵ID
     GREEN_LEAF = 1
     BROCCOLI = 2
+    BOSS_PAMPKIN = 21
     # スプライトグループの作成
     all_sprites = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
@@ -367,8 +379,6 @@ if __name__ == '__main__':
         enemy = SpaceEnemy(enemy_type, enemy_size, enemy_speed_x)
         all_sprites.add(enemy)
         enemies.add(enemy)
-
-
 
     # ゲームループ
     running = True
@@ -450,6 +460,14 @@ if __name__ == '__main__':
             good_score += 1
             # print("size= "+str(enemy_size)+", score= "+str(score))
             play_enemy_down_sound(enemy_size)
+            if(good_score == 100):
+                # ボスの生成
+                nextType = BOSS_PAMPKIN
+                size=21 # fixed
+                speed_x = -1
+                enemy_new = SpaceEnemy(nextType, size, speed_x)
+                all_sprites.add(enemy_new)
+                enemies.add(enemy_new)
             # 敵が size <= 2 のときだけ
             if(enemy.size<=2):
                 bonus = random.randrange(0, 100)
@@ -466,19 +484,22 @@ if __name__ == '__main__':
                     bean.rect.y = enemy.rect.y
                     beans.add(bean)
                     all_sprites.add(bean)
-            # 敵はすぐに右から出す
-            enemy.kill()
-            type = random.randrange(1, 3)   # 1 or 2
-            if(type==1):
-                nextType = BROCCOLI
-            else:
-                nextType = GREEN_LEAF
-            size = random.randrange(1, 4)   # 1 - 3
-            speed_x = random.randrange(-5,-2) # -5 to -3
-            # size とtype は更新
-            enemy_new = SpaceEnemy(nextType, size, speed_x)
-            all_sprites.add(enemy_new)
-            enemies.add(enemy_new)
+            if(enemy.type==BOSS_PAMPKIN):
+                enemy.kill()
+            else:                
+                # 敵はすぐに右から出す
+                enemy.kill()
+                type = random.randrange(1, 3)   # 1 or 2
+                if(type==1):
+                    nextType = BROCCOLI
+                else:
+                    nextType = GREEN_LEAF
+                size = random.randrange(1, 4)   # 1 - 3
+                speed_x = random.randrange(-5,-2) # -5 to -3
+                # size とtype は更新
+                enemy_new = SpaceEnemy(nextType, size, speed_x)
+                all_sprites.add(enemy_new)
+                enemies.add(enemy_new)
 
         # 自分と敵との衝突判定
         #hits = pygame.sprite.spritecollide(player, enemies, False)
