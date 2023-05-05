@@ -37,7 +37,7 @@ python vegi.py
 著作権	
 Creative Commons Attribution-NonCommercial-NoDerivs 4.0 
 備考	Jack Singer Hall, Calgary. Recorded 2015 Aug 09
-
+https://imslp.org/wiki/The_Planets,_Op.32_(Holst,_Gustav)
 
 ## 謝辞
 ChatGPT3 さんありがとう

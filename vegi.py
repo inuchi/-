@@ -56,7 +56,7 @@ def draw_score(screen, params, gameover):
         # ゲームオーバー時に文字を表示
         font = pygame.font.SysFont(None, 136)
         if(cleared==True):
-            if(badscore<=0):
+            if(badscore>=0):
                 text = font.render("Perfect", True, colorSCORE_inner)
             else:
                 text = font.render("Cleared", True, colorSCORE_inner)
