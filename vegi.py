@@ -48,13 +48,20 @@ def play_enemy_down_sound(enemy_size):
 def draw_score(screen, params, gameover):
     goodscore = params[0]
     badscore = params[1]
-    powerbulletRest = params[2]
+    bossRest = params[2]
     playerPowered_up = params[3]
+    cleared = params[4]
             
     if(gameover):
         # ゲームオーバー時に文字を表示
         font = pygame.font.SysFont(None, 136)
-        text = font.render("Game Over", True, colorSCORE_inner)
+        if(cleared==True):
+            if(badscore<=0):
+                text = font.render("Perfect", True, colorSCORE_inner)
+            else:
+                text = font.render("Cleared", True, colorSCORE_inner)
+        else:   
+            text = font.render("Game Over", True, colorSCORE_inner)
         posx = WIDTH_OF_SCREEN // 2 - text.get_width() // 2
         posy = HEIGHT_OF_SCREEN // 2 - text.get_height() // 2 -50
         screen.blit(text, (posx, posy))
@@ -104,7 +111,7 @@ def draw_score(screen, params, gameover):
         screen.blit(text, (posx, posy))
         # 弾の残り
         font = pygame.font.SysFont(None, 70) 
-        text = font.render("rest= "+str(powerbulletRest), True, colorSCORE_inner)
+        text = font.render("rest= "+str(bossRest), True, colorSCORE_inner)
         posx = WIDTH_OF_SCREEN // 5 * 1 - text.get_width() // 2
         posy = HEIGHT_OF_SCREEN // 5 * 4 - text.get_height() // 2
         screen.blit(text, (posx, posy))
@@ -143,7 +150,6 @@ class Player(pygame.sprite.Sprite):
         pass
 
 # 敵のクラス
-
 class SpaceEnemy(pygame.sprite.Sprite):
     def __init__(self, type, size, speed_x=-5):
         super().__init__()
@@ -171,8 +177,11 @@ class SpaceEnemy(pygame.sprite.Sprite):
         elif size == 4:            
             self.image = pygame.transform.scale(self.image, (70, 70))
             self.rect = self.image.get_rect()
-        else:
+        elif size == 21:
             self.image = pygame.transform.scale(self.image, (150, 100))
+            self.rect = self.image.get_rect()
+        else:  # 大きい
+            self.image = pygame.transform.scale(self.image, (450, 300))
             self.rect = self.image.get_rect()
 
         # 位置と速度
@@ -187,7 +196,6 @@ class SpaceEnemy(pygame.sprite.Sprite):
             else: 
                 self.speed_y = 0
                 #print("====speed_y:   "+str(self.speed_y))
-
         elif(type==GREEN_LEAF): #葉っぱ
             self.rect.x = WIDTH_OF_SCREEN
             self.rect.y = random.randrange(HEIGHT_OF_SCREEN*2//3, HEIGHT_OF_SCREEN-size)   # 画面両端にマージン
@@ -196,20 +204,17 @@ class SpaceEnemy(pygame.sprite.Sprite):
                 self.speed_y = -0.5
             else:
                 self.speed_y = 0
-        else:
+        else:   # ボス
             self.rect.x = WIDTH_OF_SCREEN
-            self.rect.y = random.randrange(HEIGHT_OF_SCREEN*2//3, HEIGHT_OF_SCREEN-size)   # 画面両端にマージン
+            self.rect.y = random.randrange(0, HEIGHT_OF_SCREEN*2//3)   # 画面両端にマージン
             self.speed_x = speed_x
             self.speed_y = 0
-
         self.straight_y = self.rect.y #直進時の軌道
     def updateEnemy(self):
         # （bad スコア更新のために）敵の位置をここで更新する
         # 敵の種類による位置更新
         self.rect.centerx += self.speed_x
         self.rect.centery += self.speed_y 
-        
-    
         if(self.rect.centery > HEIGHT_OF_SCREEN-20):
             self.rect.centery = HEIGHT_OF_SCREEN - 20
         if(self.rect.centery < 20):
@@ -220,9 +225,7 @@ class SpaceEnemy(pygame.sprite.Sprite):
             if(self.type == BROCCOLI):
                 self.rect.y = random.randrange(0+size, HEIGHT_OF_SCREEN//3*2)   # 画面両端にマージン
             else:
-                self.rect.y = random.randrange(HEIGHT_OF_SCREEN//3*2-size)   # 画面両端にマージン
-
-
+                self.rect.y = random.randrange(HEIGHT_OF_SCREEN//3*2-size)  
             # マイナス1点
             return -1
         else:
@@ -236,36 +239,30 @@ class SpaceEnemy(pygame.sprite.Sprite):
         #
         #(0, HEIGHT_OF_SCREEN)-------------------------------------(WIDTH_OF_SCREEN, HEIGHT_OF_SCREEN)
 
-    def bossAttacked(self):
-        # ボスを攻撃する
+    def bossAttacked(self):     
+        # ボスを攻撃する（ボス敵限定）
         self.energy -= 1
         print("energy"+str(self.energy))
-        if(self.energy<=0):
-            return DEAD        
-        elif(self.energy<=3):
-            x=self.rect.x
-            y=self.rect.y
-            self.image = pygame.image.load('files/pampkin-5.png')  
-            self.image = pygame.transform.scale(self.image, (150, 100))
-            self.rect = self.image.get_rect()
-            self.rect.x = x
-            self.rect.y = y
-        elif(self.energy<=5):
-            x=self.rect.x
-            y=self.rect.y
-            self.image = pygame.image.load('files/pampkin-3.png')  
-            self.image = pygame.transform.scale(self.image, (150, 100))
-            self.rect = self.image.get_rect()
-            self.rect.x = x
-            self.rect.y = y
-        elif(self.energy<=10):
-            x=self.rect.x
-            y=self.rect.y
-            self.image = pygame.image.load('files/pampkin-2.png')  
-            self.image = pygame.transform.scale(self.image, (150, 100))
-            self.rect = self.image.get_rect()
-            self.rect.x = x
-            self.rect.y = y
+        x=self.rect.x
+        y=self.rect.y
+        if(self.type == BOSS_PAMPKIN):
+            if(self.energy<=0):
+                return DEAD        
+            elif(self.energy<=3):
+                self.image = pygame.image.load('files/pampkin-5.png')  
+                self.image = pygame.transform.scale(self.image, (150, 100))
+            elif(self.energy<=5):
+                self.image = pygame.image.load('files/pampkin-3.png')  
+                self.image = pygame.transform.scale(self.image, (150, 100))
+            elif(self.energy<=10):
+                self.image = pygame.image.load('files/pampkin-2.png')  
+                self.image = pygame.transform.scale(self.image, (150, 100))
+            # else
+            #   何もしない
+        # リセット x-y pos (サイズ変更したときのため)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
         return ALIVE 
     def update(self):
         return  # なにもしない
@@ -319,7 +316,7 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
         elif(self.rect.y > HEIGHT_OF_SCREEN):
             self.kill()
-            
+
 # 拡散弾のクラス
 class SplashBullet(pygame.sprite.Sprite):
     def __init__(self, x, y,numofbullet=3):
@@ -355,7 +352,7 @@ class SplashBullet(pygame.sprite.Sprite):
 class trajectBullet(pygame.sprite.Sprite):
     def __init__(self, x, y, param):
         super().__init__()
-        self.image_org = pygame.image.load('files/bullet-L3w.png')  # 弾の画像
+        self.image_org = pygame.image.load('files/bullet-Lw.png')  # 弾の画像
         resized_image = pygame.transform.scale(self.image_org, (10,10))
         self.image = resized_image
         self.rect = self.image.get_rect()
@@ -425,7 +422,6 @@ if __name__ == '__main__':
     else:
         shoot_auto = False
         shoot_auto_counter = 0
-
 
     # サウンドのロード
     enemy_down_sound_1 = pygame.mixer.Sound('files/sound1.wav')
@@ -497,7 +493,8 @@ if __name__ == '__main__':
     player_powered_up = 0
     good_score = 0
     bad_score = 0
-    player_rest = 10
+    restboss = 10
+    game_clear = False
     while running:
         # キー操作
         shoot = 0   # one shot
@@ -595,54 +592,61 @@ if __name__ == '__main__':
             good_score += 1
             # print("size= "+str(enemy_size)+", score= "+str(score))
             play_enemy_down_sound(enemy_size)
-            if(good_score == 100):
-                # ボスの生成
-                nextType = BOSS_PAMPKIN
-                size=21 # fixed
-                speed_x = -1
-                enemy_new = SpaceEnemy(nextType, size, speed_x)
-                all_sprites.add(enemy_new)
-                enemies.add(enemy_new)
-            # 敵が size <= 2 のときだけ
-            if(enemy.size<=2):
-                bonus = random.randrange(0, 100)
-                if(bonus <20):
-                    # パワーアップ豆を追加
-                    speed_x = enemy.speed_x / 3 - 1
-                    if(bonus<14):
-                        bean = Bean(GOODBEAN, speed_x)  # good
-                    else:
-                        bean = Bean(BADBEAN, speed_x)  # bad
-                    bean.rect.x = enemy.rect.x
-                    bean.rect.y = enemy.rect.y
-                    beans.add(bean)
-                    all_sprites.add(bean)
-            if(enemy.type==BOSS_PAMPKIN):
-                res = enemy.bossAttacked()
-                if(res==DEAD):
+            if(game_clear ==False):
+                if((good_score % 300)==99):
+                    # ボスの生成
+                    nextType = BOSS_PAMPKIN
+                    size=21 # fixed
+                    speed_x = -1
+                    enemy_new = SpaceEnemy(nextType, size, speed_x)
+                    all_sprites.add(enemy_new)
+                    enemies.add(enemy_new)
+                # 敵が size <= 2 のときだけ
+                if(enemy.size<=2):
+                    bonus = random.randrange(0, 100)
+                    if(bonus <20):
+                        # パワーアップ豆を追加
+                        speed_x = enemy.speed_x / 3 - 1
+                        if(bonus<14):
+                            bean = Bean(GOODBEAN, speed_x)  # good
+                        else:
+                            bean = Bean(BADBEAN, speed_x)  # bad
+                        bean.rect.x = enemy.rect.x
+                        bean.rect.y = enemy.rect.y
+                        beans.add(bean)
+                        all_sprites.add(bean)
+                if(enemy.type==BOSS_PAMPKIN):
+                    res = enemy.bossAttacked()
+                    if(res==DEAD):
+                        restboss-=1
+
+                        if(restboss<=0):
+                            game_clear = True
+                        enemy.kill()
+                else:                
+                    # 敵はすぐに右から出す
                     enemy.kill()
-            else:                
-                # 敵はすぐに右から出す
-                enemy.kill()
-                type = random.randrange(1, 3)   # 1 or 2
-                if(type==1):
-                    nextType = BROCCOLI
-                else:
-                    nextType = GREEN_LEAF
-                size = random.randrange(1, 4)   # 1 - 3
-                speed_x = random.randrange(-5,-2) # -5 to -3
-                # size とtype は更新
-                enemy_new = SpaceEnemy(nextType, size, speed_x)
-                all_sprites.add(enemy_new)
-                enemies.add(enemy_new)
+                    type = random.randrange(1, 3)   # 1 or 2
+                    if(type==1):
+                        nextType = BROCCOLI
+                    else:
+                        nextType = GREEN_LEAF
+                    size = random.randrange(1, 4)   # 1 - 3
+                    speed_x = random.randrange(-5,-2) # -5 to -3
+                    # size とtype は更新
+                    enemy_new = SpaceEnemy(nextType, size, speed_x)
+                    all_sprites.add(enemy_new)
+                    enemies.add(enemy_new)
 
         # 自分と敵との衝突判定
         #hits = pygame.sprite.spritecollide(player, enemies, False)
         hits = pygame.sprite.spritecollide(player, enemies, False, pygame.sprite.collide_circle_ratio(0.6))
         if hits:
-            player_rest -=1
             # 敵にあたったらゲーム終了
             running = False
+        if game_clear:
+            running = False
+            game_clear= True 
         # 自分とパワーアップ豆との当たり判定（パワーアップするかどうか）
         for bean in beans:
             if bean.rect.colliderect(player.rect):
@@ -673,7 +677,7 @@ if __name__ == '__main__':
         if not running:
             # スコアを描画して終了
             gameend = True
-            params = (good_score, bad_score, player_rest, player_powered_up)
+            params = (good_score, bad_score, restboss, player_powered_up, game_clear)
             #print(params)
             draw_score(screen, params, gameend) #game over
             pygame.display.flip()
@@ -685,7 +689,7 @@ if __name__ == '__main__':
             screen.fill(colorBG)
             # スコアの描画
             gameend = False
-            params = (good_score, bad_score, player_rest, player_powered_up)
+            params = (good_score, bad_score, restboss, player_powered_up, game_clear)
             draw_score(screen, params, gameend)
             # スプライトも表示    
             all_sprites.draw(screen) # スプライトを描画する
